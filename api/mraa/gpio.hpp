@@ -28,13 +28,12 @@
 #include <stdexcept>
 
 #if defined(SWIGJAVASCRIPT)
-#if NODE_MODULE_VERSION >= 0x000D
-#include <uv.h>
-#endif
+  #if NODE_MODULE_VERSION >= 0x000D
+    #include <uv.h>
+  #endif
 #endif
 
-namespace mraa
-{
+namespace mraa {
 
 // These enums must match the enums in gpio.h
 
@@ -132,20 +131,18 @@ class Gpio
         return mraa_gpio_isr(m_gpio, (gpio_edge_t) mode, (void (*) (void*)) pyfunc, (void*) args);
     }
 #elif defined(SWIGJAVASCRIPT)
-    static void
-    v8isr(uv_work_t* req, int status)
-    {
-        mraa::Gpio* This = (mraa::Gpio*) req->data;
-        int argc = 1;
-        v8::Local<v8::Value> argv[] = { SWIGV8_INTEGER_NEW(-1) };
+        static void v8isr(uv_work_t* req, int status) {
+            mraa::Gpio *This = (mraa::Gpio *)req->data;
+            int argc = 1;
+            v8::Local<v8::Value> argv[] = { SWIGV8_INTEGER_NEW(-1) };
 #if NODE_MODULE_VERSION >= 0x000D
-        v8::Local<v8::Function> f = v8::Local<v8::Function>::New(v8::Isolate::GetCurrent(), This->m_v8isr);
-        f->Call(SWIGV8_CURRENT_CONTEXT()->Global(), argc, argv);
+            v8::Local<v8::Function> f = v8::Local<v8::Function>::New(v8::Isolate::GetCurrent(), This->m_v8isr);
+            f->Call(SWIGV8_CURRENT_CONTEXT()->Global(), argc, argv);
 #else
-        This->m_v8isr->Call(SWIGV8_CURRENT_CONTEXT()->Global(), argc, argv);
+            This->m_v8isr->Call(SWIGV8_CURRENT_CONTEXT()->Global(), argc, argv);
 #endif
-        delete req;
-    }
+            delete req;
+        }
 
     static void
     nop(uv_work_t* req)
@@ -161,11 +158,14 @@ class Gpio
         uv_queue_work(uv_default_loop(), req, nop, v8isr);
     }
 
-    mraa_result_t
-    isr(Edge mode, v8::Handle<v8::Function> func)
-    {
+    mraa_result_t isr(Edge mode, v8::Handle<v8::Function> func) {
 #if NODE_MODULE_VERSION >= 0x000D
-        m_v8isr.Reset(v8::Isolate::GetCurrent(), func);
+            m_v8isr.Reset(v8::Isolate::GetCurrent(), func);
+#else
+            m_v8isr = v8::Persistent<v8::Function>::New(func);
+#endif
+            return mraa_gpio_isr(m_gpio, (gpio_edge_t) mode, &uvwork, this);
+        }
 #else
         m_v8isr = v8::Persistent<v8::Function>::New(func);
 #endif
@@ -197,11 +197,12 @@ class Gpio
     isrExit()
     {
 #if defined(SWIGJAVASCRIPT)
-#if NODE_MODULE_VERSION >= 0x000D
-        m_v8isr.Reset();
-#else
-        m_v8isr.Dispose();
-        m_v8isr.Clear();
+  #if NODE_MODULE_VERSION >= 0x000D
+            m_v8isr.Reset();
+  #else
+            m_v8isr.Dispose();
+            m_v8isr.Clear();
+  #endif
 #endif
 #endif
         return mraa_gpio_isr_exit(m_gpio);
