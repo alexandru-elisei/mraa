@@ -42,7 +42,8 @@ Specific platform information for supported platforms is documented here:
 - @ref edison
 - @ref de3815
 - @ref minnowmax
-- @ref rasppi
+- @ref rasppib
+- @ref vocore
 
 ## DEBUGGING
 

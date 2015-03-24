@@ -22,50 +22,20 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#pragma once
+#include <stdlib.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "mraa_internal.h"
+#include "mips/vocore.h"
 
-#include <syslog.h>
+mraa_platform_t
+mraa_mips_platform()
+{
+    mraa_platform_t platform_type = MRAA_UNKNOWN_PLATFORM;
 
-#include "common.h"
-#include "mraa_internal_types.h"
-#include "mraa_adv_func.h"
+    //For the Time being, Will always be VoCore when running ARM
+    //The mips platforms seem to use DTS so the detection should be clean
+    platform_type = MRAA_VOCORE;
+    plat = mraa_vocore();
 
-extern mraa_adv_func_t* advance_func;
-extern mraa_board_t* plat;
-
-/**
- * Takes in pin information and sets up the multiplexors.
- *
- * @param meta
- * @return mraa result type indicating success of actions.
- */
-mraa_result_t mraa_setup_mux_mapped(mraa_pin_t meta);
-
-/**
- * runtime detect running x86 platform
- *
- * @return mraa_platform_t of the init'ed platform
- */
-mraa_platform_t mraa_x86_platform();
-
-/**
- * runtime detect running arm platforms
- *
- * @return mraa_platform_t of the init'ed platform
- */
-mraa_platform_t mraa_arm_platform();
-
-/**
- * runtime detect running mips platforms
- *
- * @return mraa_platform_t of the init'ed platform
- */
-mraa_platform_t mraa_mips_platform();
-
-#ifdef __cplusplus
+    return platform_type;
 }
-#endif

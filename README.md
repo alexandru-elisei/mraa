@@ -27,6 +27,10 @@ ARM
 ---
 * [Raspberry Pi](../master/docs/raspberry_pi.md)
 
+MIPS
+----
+* [VoCore](../master/docs/vocore.md)
+
 Installing on your board
 ========
 

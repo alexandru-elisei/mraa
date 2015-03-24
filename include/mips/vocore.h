@@ -28,43 +28,12 @@
 extern "C" {
 #endif
 
-#include <syslog.h>
+#include "mraa_internal.h"
 
-#include "common.h"
-#include "mraa_internal_types.h"
-#include "mraa_adv_func.h"
+#define MRAA_VOCORE_PIN_COUNT 36
 
-extern mraa_adv_func_t* advance_func;
-extern mraa_board_t* plat;
-
-/**
- * Takes in pin information and sets up the multiplexors.
- *
- * @param meta
- * @return mraa result type indicating success of actions.
- */
-mraa_result_t mraa_setup_mux_mapped(mraa_pin_t meta);
-
-/**
- * runtime detect running x86 platform
- *
- * @return mraa_platform_t of the init'ed platform
- */
-mraa_platform_t mraa_x86_platform();
-
-/**
- * runtime detect running arm platforms
- *
- * @return mraa_platform_t of the init'ed platform
- */
-mraa_platform_t mraa_arm_platform();
-
-/**
- * runtime detect running mips platforms
- *
- * @return mraa_platform_t of the init'ed platform
- */
-mraa_platform_t mraa_mips_platform();
+mraa_board_t*
+mraa_vocore();
 
 #ifdef __cplusplus
 }
