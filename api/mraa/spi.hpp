@@ -44,28 +44,105 @@ typedef enum {
                       output data (change) on falling edge */
 } Spi_Mode;
 
+typedef enum {
+    MRAA_SPI_SOFT_8BIS = 8,   //** SoftSPI handles CS pin in chunks of 8 Bits */
+    MRAA_SPI_SOFT_9BIS = 9,   //** SoftSPI handles CS pin in chunks of 9 Bits (if spidev associated allows 9 bit transfer) */
+    MRAA_SPI_SOFT_16BIS = 16, //** SoftSPI handles CS pin in chunks of 16 bits */
+} Spi_Soft_Bits;
 
 /**
-* @brief API to Serial Peripheral Interface
-*
-* This file defines the SPI interface for libmraa
-*
-* @snippet Spi-pot.cpp Interesting
-*/
-class Spi
-{
-  public:
-    /**
-     * Initialise SPI object using the board mapping to set muxes
-     *
-     * @param bus to use, as listed in the platform definition, normally 0
-     */
-    Spi(int bus)
-    {
-        m_spi = mraa_spi_init(bus);
+ * @brief API to Serial Peripheral Interface
+ *
+ * This file defines the SPI interface for libmraa
+ *
+ * @snippet Spi-pot.cpp Interesting
+ */
+class Spi {
+    public:
+        /**
+         * Initialise SPI object using the board mapping to set muxes
+         *
+         * @param bus to use, as listed in the platform definition, normally 0
+         */
+        Spi(int bus) {
+            m_spi = mraa_spi_init(bus);
 
-        if (m_spi == NULL) {
-            throw std::invalid_argument("Error initialising SPI bus");
+            if (m_spi == NULL) {
+                throw std::invalid_argument("Error initialising SPI bus");
+            }
+        }
+
+        /**
+         * Closes spi bus
+         */
+        ~Spi() {
+            mraa_spi_stop(m_spi);
+        }
+
+        /**
+         * Set the SPI device mode. see spidev0-3
+         *
+         * @param mode the mode. See Linux spidev doc
+         * @return Result of operation
+         */
+        mraa_result_t mode(Spi_Mode mode) {
+            return mraa_spi_mode(m_spi, (mraa_spi_mode_t) mode);
+        }
+
+        /**
+         * Set the SPI device operating clock frequency
+         *
+         * @param hz the frequency to set in hz
+         * @return Result of operation
+         */
+        mraa_result_t frequency(int hz) {
+            return mraa_spi_frequency(m_spi, hz);
+        }
+
+        /**
+         * Write single byte to the SPI device
+         *
+         * @param data the byte to send
+         * @return data received on the miso line or -1 in case of error
+         */
+        int writeByte(uint8_t data) {
+            return mraa_spi_write(m_spi, (uint8_t) data);
+        }
+
+        /**
+         * Write single byte to the SPI device
+         *
+         * @param data the byte to send
+         * @return data received on the miso line
+         */
+        long write_word(uint16_t data) {
+            return mraa_spi_write_word(m_spi, (uint16_t) data);
+        }
+
+        /**
+         * Write buffer of bytes to SPI device The pointer return has to be
+         * free'd by the caller. It will return a NULL pointer in cases of
+         * error
+         *
+         * @param txBuf buffer to send
+         * @param length size of buffer to send
+         * @return uint8_t* data received on the miso line. Same length as passed in
+         */
+        uint8_t* write(uint8_t* txBuf, int length) {
+            return mraa_spi_write_buf(m_spi, txBuf, length);
+        }
+
+        /**
+         * Write buffer of bytes to SPI device The pointer return has to be
+         * free'd by the caller. It will return a NULL pointer in cases of
+         * error
+         *
+         * @param txBuf buffer to send
+         * @param length size of buffer (in bytes) to send
+         * @return uint8_t* data received on the miso line. Same length as passed in
+         */
+        uint16_t* write_word(uint16_t* txBuf, int length) {
+            return mraa_spi_write_buf_word(m_spi, txBuf, length);
         }
     }
 
@@ -187,31 +264,54 @@ class Spi
     }
 #endif
 
-    /**
-     * Change the SPI lsb mode
-     *
-     * @param lsb Use least significant bit transmission - 0 for msbi
-     * @return Result of operation
-     */
-    mraa_result_t
-    lsbmode(bool lsb)
-    {
-        return mraa_spi_lsbmode(m_spi, (mraa_boolean_t) lsb);
-    }
+        /**
+         * Change the SPI lsb mode
+         *
+         * @param lsb Use least significant bit transmission - 0 for msbi
+         * @return Result of operation
+         */
+        mraa_result_t lsbmode(bool lsb) {
+            return mraa_spi_lsbmode(m_spi, (mraa_boolean_t) lsb);
+        }
 
-    /**
-     * Set bits per mode on transaction, default is 8
-     *
-     * @param bits bits per word
-     * @return Result of operation
-     */
-    mraa_result_t
-    bitPerWord(unsigned int bits)
-    {
-        return mraa_spi_bit_per_word(m_spi, bits);
-    }
+        /**
+         * Disables the hardware chip select on the platform that is toggled by spidev
+         * effectively giving you a handle on the raw spi bus
+         *
+         * @param hwcs Disable/Enable hardware chip select
+         * @return Result of operation
+         */
+        mraa_result_t hwcs(bool hwcs) {
+            return mraa_spi_hw_cs(m_spi, (mraa_boolean_t) hwcs);
+        }
 
-  private:
-    mraa_spi_context m_spi;
+        /**
+         * Disables the hardware chip select on the platform that is toggled by spidev
+         * and replaces it with a software based chip select managed by mraa to
+         * overcome limitations of the implementation on some platforms supporting only
+         * 8 or 9 bit transfers do not use this on platforms that have native support
+         * for your required bitlength as spi performance will suffer using soft chip
+         * select
+         *
+         * @param number of bits per chip select. Only multiples of existing number of bits are supported
+         * @param replacement cs pin (can be any valid mraa Gpio)
+         * @return Result of operation
+         */
+        mraa_result_t swcs(Spi_Soft_Bits softbits, int pin) {
+          return mraa_spi_sw_cs(m_spi, (mraa_spi_soft_bits_t) softbits, pin);
+        }
+
+        /**
+         * Set bits per mode on transaction, default is 8
+         *
+         * @param bits bits per word
+         * @return Result of operation
+         */
+        mraa_result_t bitPerWord(unsigned int bits) {
+            return mraa_spi_bit_per_word(m_spi, bits);
+        }
+
+    private:
+        mraa_spi_context m_spi;
 };
 }
