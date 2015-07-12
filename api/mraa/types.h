@@ -143,8 +143,8 @@ typedef enum {
 } mraa_intel_edison_t;
 
 /**
-* Raspberry PI Wiring compatible numbering enum
-*/
+ * Raspberry PI Wiring compatible numbering enum
+ */
 typedef enum {
     MRAA_RASPBERRY_WIRING_PIN8 = 3,
     MRAA_RASPBERRY_WIRING_PIN9 = 5,
@@ -177,6 +177,15 @@ typedef enum {
     MRAA_RASPBERRY_WIRING_PIN28 = 38,
     MRAA_RASPBERRY_WIRING_PIN29 = 40
 } mraa_raspberry_wiring_t;
+
+/**
+ * Raspberry PI pin numbering layouts
+ */
+typedef enum {
+    MRAA_RASPBERRY_PHYSICAL_LAYOUT = 0,
+    MRAA_RASPBERRY_WIRINGPI_LAYOUT = 1,
+    MRAA_RASPBERRY_GPIO_LAYOUT = 2
+} mraa_raspberry_layout_t;
 
 /**
  * MRAA return codes
